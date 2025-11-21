@@ -3,11 +3,9 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Artwork, ArtworkDetail, Language } from '../types';
 
 const getClient = () => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    console.error("API_KEY is missing");
-    return null;
-  }
+  // import.meta.env: Vite の環境変数を使用する際の文言
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) return null;
   return new GoogleGenAI({ apiKey });
 };
 
@@ -76,9 +74,9 @@ export const fetchArtworkDetails = async (artwork: Artwork, language: Language =
   }
 };
 
-export const chatWithCurator = async (history: { role: string, parts: { text: string }[] }[], message: string, currentArt?: Artwork, language: Language = 'en') => {
+export const chatWithCurator = async (history: { role: string, parts: { text: string }[] }[], message: string, currentArt?: Artwork, language: Language = 'ja') => {
   const ai = getClient();
-  if (!ai) throw new Error("API Key missing");
+  if (!ai) throw new Error("❌ Gemini API キーがありません。");
 
   const langInstruction = language === 'ja' 
     ? "You must reply in Japanese. Use polite, formal Japanese (Desu/Masu) suitable for a museum curator." 
@@ -98,13 +96,8 @@ export const chatWithCurator = async (history: { role: string, parts: { text: st
 
   const chat = ai.chats.create({
     model: 'gemini-2.5-flash',
-    config: {
-      systemInstruction,
-    },
-    history: history.map(h => ({
-        role: h.role,
-        parts: h.parts
-    }))
+    config: { systemInstruction },
+    history
   });
 
   const response = await chat.sendMessage({ message });

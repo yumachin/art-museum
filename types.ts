@@ -1,52 +1,32 @@
-// ============================================
-// ENUMS & BASIC TYPES
-// ============================================
-
 export enum ViewState {
   GALLERY = 'GALLERY',
   DETAIL = 'DETAIL',
   COLLECTION = 'COLLECTION'
 }
-
 export type Language = 'en' | 'ja';
 
 // ============================================
 // DATABASE SCHEMA TYPES (Supabase Response)
 // ============================================
-
-/**
- * Raw database row from Supabase 'artworks' table.
- * All fields are optional except required ones, to handle partial fetches.
- */
 export interface ArtworkRow {
   id: string;
+  // insert 時点では存在しないから
   created_at?: string;
   image_url: string;
-  
-  // Bilingual Fields (EN required, JA optional)
   title_en: string;
-  title_ja: string | null;
-  
+  title_ja: string;
   artist_en: string;
-  artist_ja: string | null;
-  
+  artist_ja: string;
   period_en: string;
-  period_ja: string | null;
-  
+  period_ja: string;
   year_created: string;
-  
-  // Optional Rich Metadata
+  // ? はプロパティ自体がないことを考慮
   description_en?: string | null;
   description_ja?: string | null;
-  
-  // Analytics
-  is_public?: boolean;
-  view_count?: number;
+  // is_public?: boolean;
+  // view_count?: number;
 }
 
-/**
- * API response wrapper for fetching artworks
- */
 export interface ArtworksResponse {
   data: ArtworkRow[] | null;
   error: Error | null;
@@ -69,23 +49,16 @@ export interface ArtworkUploadMetadata {
 }
 
 // ============================================
-// UI DISPLAY TYPES (Localized & Computed)
+// UI DISPLAY TYPES
 // ============================================
-
-/**
- * Localized artwork for UI display.
- * Fields are resolved based on active language with fallbacks.
- */
 export interface Artwork {
   id: string;
-  title: string;         // Localized (falls back to EN if JA missing)
-  artist: string;        // Localized
-  period: string;        // Localized
+  title: string;
+  artist: string;
+  period: string;
   year: string;
   thumbnailUrl: string;
-  description?: string;  // Localized
-  
-  // Keep raw row for advanced features (editing, filtering)
+  description?: string;
   raw: ArtworkRow;
 }
 
@@ -99,18 +72,12 @@ export interface ArtworkDetail extends Artwork {
   symbolism: string;
 }
 
-/**
- * Chat message structure
- */
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
   timestamp?: number;
 }
 
-/**
- * Filter state for gallery
- */
 export interface FilterState {
   search: string;
   period: string | null;
@@ -120,10 +87,6 @@ export interface FilterState {
 // ============================================
 // LOCALIZATION TYPES
 // ============================================
-
-/**
- * UI text translations structure
- */
 export interface Translations {
   title: string;
   subtitle: string;
@@ -175,9 +138,10 @@ export interface TranslationRow {
 }
 
 // ============================================
-// DEFAULT FALLBACK TRANSLATIONS (Static)
+// TRANSLATIONS (Static)
 // ============================================
 
+// Record<キーの型, 値の型> → 辞書作る！
 export const DEFAULT_TEXTS: Record<Language, Translations> = {
   en: {
     title: "ART MUSEUM",
@@ -223,18 +187,18 @@ export const DEFAULT_TEXTS: Record<Language, Translations> = {
     intro: "数世紀にわたる人類の表現の旅へ。知的好奇心を満たすために厳選された、魂の窓としての名画をご堪能ください。",
     searchPlaceholder: "収蔵品を検索...",
     noResults: "該当する作品は見つかりませんでした。",
-    returnGallery: "ギャラリーに戻る",
-    analyzing: "AI学芸員が分析中...",
+    returnGallery: "戻る",
+    analyzing: "AI 学芸員が分析中...",
     visualDesc: "I. 視覚的特徴",
     techAnalysis: "II. 技法と素材",
     histContext: "III. 歴史的背景",
     symbolism: "象徴・メタファー",
-    chatTitle: "主任学芸員",
-    chatSubtitle: "AI ガイド",
+    chatTitle: "主任 AI 学芸員",
+    chatSubtitle: "ガイド",
     chatInput: "美術史について質問する...",
     chatSend: "送信",
     askCurator: "AI 学芸員に質問",
-    addArtwork: "作品を寄贈(追加)",
+    addArtwork: "作品を寄贈",
     uploadImage: "画像をアップロード",
     formTitle: "作品名",
     formArtist: "作者名",
@@ -243,16 +207,16 @@ export const DEFAULT_TEXTS: Record<Language, Translations> = {
     formSubmit: "収蔵する",
     formCancel: "キャンセル",
     welcomeMessage: "ようこそ、アートミュージアムへ。主任学芸員です。本日はどのようなご案内をいたしましょうか？",
-    analyzeBtn: "分析する",
+    analyzeBtn: "詳細を見る",
     est: "2025年",
     filterTitle: "収蔵品の絞り込み",
     filterPeriod: "時代・様式",
     filterArtist: "作者",
     filterClear: "条件をクリア",
     filterApply: "結果を表示",
-    loading: "アーカイブを取得中...",
+    loading: "収蔵作品を取得中...",
     uploading: "新規作品を収蔵処理中...",
-    errorLoading: "コレクションの読み込みに失敗しました。再読み込みしてください。",
+    errorLoading: "収蔵作品の読み込みに失敗しました。再読み込みしてください。",
     errorUploading: "作品の収蔵に失敗しました。もう一度お試しください。"
   }
 };
@@ -261,16 +225,12 @@ export const DEFAULT_TEXTS: Record<Language, Translations> = {
 // HELPER: Localize Artwork Row
 // ============================================
 
-/**
- * Converts a raw DB row into a localized UI Artwork object.
- * Falls back to English if Japanese translation is missing.
- */
 export const localizeArtwork = (row: ArtworkRow, language: Language): Artwork => {
   return {
     id: row.id,
-    title: (language === 'ja' && row.title_ja) ? row.title_ja : row.title_en,
-    artist: (language === 'ja' && row.artist_ja) ? row.artist_ja : row.artist_en,
-    period: (language === 'ja' && row.period_ja) ? row.period_ja : row.period_en,
+    title: (language === 'ja') ? row.title_ja : row.title_en,
+    artist: (language === 'ja') ? row.artist_ja : row.artist_en,
+    period: (language === 'ja') ? row.period_ja : row.period_en,
     year: row.year_created,
     thumbnailUrl: row.image_url,
     description: language === 'ja' 

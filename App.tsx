@@ -1,23 +1,22 @@
-
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Artwork, ViewState, ChatMessage, Language, DEFAULT_TEXTS, FilterState, ArtworkRow, localizeArtwork } from './types';
 import ArtDetail from './components/ArtDetail';
 import AddArtworkModal from './components/AddArtworkModal';
 import FilterSheet from './components/FilterSheet';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
+import OfflineIndicator from './components/OfflineIndicator';
 import { chatWithCurator } from './services/geminiService';
 import { museumService } from './services/museumService';
-import { IconSearch, IconMenu, IconMessageCircle, IconX, IconSparkles, IconGlobe, IconPlus, IconFilter } from './components/Icons';
+import { IconSearch, IconMessageCircle, IconX, IconSparkles, IconGlobe, IconPlus } from './components/Icons';
 
 function App() {
   const [viewState, setViewState] = useState<ViewState>(ViewState.GALLERY);
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   
-  // Data State
   const [rawArtworks, setRawArtworks] = useState<ArtworkRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [language, setLanguage] = useState<Language>('ja');
 
-  // Filter State
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     period: null,
@@ -28,22 +27,21 @@ function App() {
   
   const t = DEFAULT_TEXTS[language];
 
-  // Chat State
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isChatThinking, setIsChatThinking] = useState(false);
+  // チャット画面を一番下まで自動スクロールするため
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch Data on Mount
   useEffect(() => {
     const loadCollection = async () => {
       setIsLoading(true);
       try {
         const rows = await museumService.getArtworks();
         setRawArtworks(rows);
-      } catch (e) {
-        console.error("Failed to load collection", e);
+      } catch (error) {
+        console.error(error);
       } finally {
         setIsLoading(false);
       }
@@ -51,24 +49,18 @@ function App() {
     loadCollection();
   }, []);
 
-  // Derived State: Localized Artworks based on current language
   const localizedArtworks = useMemo(() => {
-    return rawArtworks.map(row => localizeArtwork(row, language));
+    return rawArtworks.map((row: ArtworkRow) => localizeArtwork(row, language));
   }, [rawArtworks, language]);
 
-  // Initialize chat message
   useEffect(() => {
-     if (chatHistory.length === 0) {
+     if (chatHistory.length === 0 || chatHistory.length === 1) {
        setChatHistory([{ role: 'model', text: t.welcomeMessage }]);
      }
-     else if (chatHistory.length === 1 && chatHistory[0].role === 'model') {
-      setChatHistory([{ role: 'model', text: t.welcomeMessage }]);
-    }
-  }, [language, chatHistory.length, t.welcomeMessage]);
+  }, [language, chatHistory.length]);
 
-  // Filtering Logic
   const filteredArtworks = useMemo(() => {
-    return localizedArtworks.filter(art => {
+    return localizedArtworks.filter((art: Artwork) => {
       const searchLower = filters.search.toLowerCase();
       const matchesSearch = 
          art.title.toLowerCase().includes(searchLower) || 
@@ -96,14 +88,11 @@ function App() {
   };
 
   const handleAddArtwork = (newRow: ArtworkRow) => {
-    // Optimistically update raw array
-    setRawArtworks(prev => [newRow, ...prev]);
+    setRawArtworks((prev: ArtworkRow[]) => [newRow, ...prev]);
   };
 
   const toggleLanguage = () => {
-    setLanguage(prev => prev === 'en' ? 'ja' : 'en');
-    // Note: We keep filters, but they might not match new localized values perfectly if not cleared.
-    // For better UX, we often clear specific text filters on language switch.
+    setLanguage((prev: Language) => prev === 'en' ? 'ja' : 'en');
     setFilters({ search: '', period: null, artist: null });
   };
 
@@ -113,23 +102,22 @@ function App() {
 
     const userMsg = chatInput;
     setChatInput("");
-    setChatHistory(prev => [...prev, { role: 'user', text: userMsg }]);
+    setChatHistory((prev: ChatMessage[]) => [...prev, { role: 'user', text: userMsg }]);
     setIsChatThinking(true);
 
     try {
-      const apiHistory = chatHistory.map(msg => ({
+      const apiHistory = chatHistory.map((msg: ChatMessage) => ({
         role: msg.role,
         parts: [{ text: msg.text }]
       }));
 
       const response = await chatWithCurator(apiHistory, userMsg, selectedArtwork || undefined, language);
-      
       if (response) {
-        setChatHistory(prev => [...prev, { role: 'model', text: response }]);
+        setChatHistory((prev: ChatMessage[]) => [...prev, { role: 'model', text: response }]);
       }
     } catch (error) {
         console.error(error);
-        setChatHistory(prev => [...prev, { role: 'model', text: language === 'ja' ? "申し訳ありません。アーカイブへの接続に一時的な問題が発生しています。" : "Apologies, I am momentarily unable to access the archives. Please try again." }]);
+        setChatHistory((prev: ChatMessage[]) => [...prev, { role: 'model', text: language === 'ja' ? "申し訳ありません。学芸員への問い合わせに一時的な問題が発生しています。" : "Apologies, I am momentarily unable to access the archives. Please try again." }]);
     } finally {
       setIsChatThinking(false);
     }
@@ -142,17 +130,15 @@ function App() {
   return (
     <div className="min-h-screen bg-museum-950 font-sans selection:bg-museum-gold selection:text-museum-ivory">
       
-      {/* Navigation (Only visible in Gallery) */}
       {viewState === ViewState.GALLERY && (
         <nav className="fixed top-0 w-full z-40 bg-museum-950/90 backdrop-blur-md border-b border-museum-800 transition-all duration-500">
-          <div className="max-w-7xl mx-auto px-6 h-16 md:h-20 flex items-center justify-between">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-20 flex items-center justify-between">
              <div className="flex items-center gap-4">
-               <div className="w-8 h-8 bg-museum-gold rounded-sm flex items-center justify-center text-museum-950 font-display font-bold text-xl">A</div>
+               <div className="w-8 h-8 bg-museum-gold rounded-sm flex items-center justify-center text-museum-950 font-serif font-bold text-xl">A</div>
                <span className="font-display text-xl tracking-[0.15em] text-museum-ivory hidden sm:block">{t.title}</span>
              </div>
              
-             <div className="flex items-center gap-3 md:gap-6">
-                {/* Desktop Search */}
+             <div className="flex items-center gap-4 md:gap-6">
                 <div className="relative hidden md:block group">
                    <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-museum-muted group-focus-within:text-museum-gold transition-colors" />
                    <input 
@@ -164,55 +150,47 @@ function App() {
                    />
                 </div>
                 
-                {/* Mobile Search/Filter Trigger */}
                 <button
                   onClick={() => setIsFilterOpen(true)}
                   className="md:hidden text-museum-ivory hover:text-museum-gold transition-colors relative"
                 >
-                  <IconSearch className="w-6 h-6" />
+                  <IconSearch className="w-5 h-5 md:w-6 md:h-6" />
                   {activeFilterCount > 0 && (
                     <span className="absolute -top-1 -right-1 w-3 h-3 bg-museum-gold rounded-full border-2 border-museum-950"></span>
                   )}
                 </button>
 
-                {/* Language Toggle */}
                 <button 
                   onClick={toggleLanguage}
-                  className="flex items-center gap-1 text-museum-ivory hover:text-museum-gold transition-colors border border-museum-800 rounded px-3 py-1"
+                  className="flex items-center gap-1.5 text-museum-ivory hover:text-museum-gold transition-colors border border-museum-800 rounded px-2 md:px-3 py-1 md:py-2"
                 >
-                   <IconGlobe className="w-4 h-4" />
-                   <span className="text-xs font-bold font-display">{language === 'en' ? 'JP' : 'EN'}</span>
+                   <IconGlobe className="w-4 h-4 md:w-5 md:h-5" />
+                   <span className="text-xs md:text-sm font-bold font-serif">{language === 'en' ? 'EN' : 'JP'}</span>
                 </button>
 
-                {/* Add Art Mobile/Desktop */}
                 <button 
                    onClick={() => setIsAddModalOpen(true)}
                    className="text-museum-ivory hover:text-museum-gold transition-colors"
                    aria-label={t.addArtwork}
                 >
-                   <IconPlus className="w-6 h-6" />
+                   <IconPlus className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
              </div>
           </div>
         </nav>
       )}
 
-      {/* Main Content */}
       <main className="relative">
         {viewState === ViewState.GALLERY ? (
-          <div className="pt-24 md:pt-32 px-6 pb-20 max-w-7xl mx-auto animate-fade-in">
-            {/* Hero / Header */}
-            <header className="mb-20 text-center">
-               <span className="block font-serif italic text-museum-gold mb-4 text-lg">{t.est}</span>
-               <h1 className="font-display text-3xl md:text-6xl text-museum-ivory mb-4 md:mb-6 tracking-wide leading-tight">{t.subtitle}</h1>
-               <p className="max-w-xl mx-auto text-museum-muted font-serif text-sm md:text-xl leading-relaxed">
-                 {t.intro}
-               </p>
+          <div className="pt-16 md:pt-24 md:pt-32 px-6 pb-24 max-w-7xl mx-auto animate-fade-in">
+            <header className={`${activeFilterCount > 0 ? "mb-8" : "mb-14"} md:mb-16 text-center`}>
+               <span className="block font-serif italic text-museum-gold mb-4 text-xl md:text-3xl">{t.est}</span>
+               <h2 className={`${language === 'ja' ? "font-serif" : "font-display"} text-3xl md:text-6xl text-museum-ivory mb-4 md:mb-6 tracking-wide leading-tight`}>{t.title}</h2>
+               <p className="max-w-xl mx-auto text-museum-muted font-serif text-xs md:text-xl leading-relaxed">{t.intro}</p>
             </header>
 
-            {/* Active Filters Display (Desktop mostly) */}
             {activeFilterCount > 0 && (
-              <div className="mb-8 flex flex-wrap gap-2 justify-center animate-fade-in">
+              <div className="font-serif mb-4 md:mb-10 flex flex-wrap gap-2 justify-center animate-fade-in">
                  {filters.search && (
                    <span className="px-3 py-1 bg-museum-900 border border-museum-700 rounded-full text-xs text-museum-ivory flex items-center gap-2">
                      "{filters.search}" <button onClick={() => setFilters(f => ({...f, search: ''}))}><IconX className="w-3 h-3"/></button>
@@ -259,10 +237,10 @@ function App() {
                         </div>
                     </div>
                     <div className="text-center md:text-left">
-                        <h3 className={`font-display text-xl text-museum-ivory group-hover:text-museum-gold transition-colors duration-300 ${language === 'ja' ? 'font-serif font-bold' : ''}`}>
+                        <h3 className={`font-display ${art.title.length >= 20 ? "text-md" : art.title.length >= 16 ? "text-lg" : "text-xl"} text-museum-ivory group-hover:text-museum-gold transition-colors duration-300 ${language === 'ja' ? 'font-serif font-bold' : ''}`}>
                           {art.title}
                         </h3>
-                        <p className="font-serif text-museum-muted italic">{art.artist}, {art.year}</p>
+                        <p className={`font-serif ${art.artist.length >= 20 ? "text-xs" : art.title.length >= 16 ? "text-sm" : "text-md"} text-museum-muted italic`}>{art.artist}, {art.year}</p>
                     </div>
                   </div>
                 ))}
@@ -270,7 +248,7 @@ function App() {
             )}
 
             {!isLoading && filteredArtworks.length === 0 && (
-              <div className="text-center py-20 text-museum-700 font-serif italic text-xl">
+              <div className="text-center py-20 text-museum-700 font-serif italic text-sm md:text-xl">
                 {t.noResults}
               </div>
             )}
@@ -280,7 +258,6 @@ function App() {
         )}
       </main>
 
-      {/* Mobile Filter Sheet */}
       <FilterSheet 
         isOpen={isFilterOpen} 
         onClose={() => setIsFilterOpen(false)}
@@ -290,7 +267,6 @@ function App() {
         texts={t}
       />
 
-      {/* Modals */}
       <AddArtworkModal 
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
@@ -298,13 +274,10 @@ function App() {
         texts={t}
       />
 
-      {/* Curator Chat Widget */}
       <div className={`fixed z-[45] transition-all duration-300 ${isChatOpen ? 'inset-0 sm:inset-auto sm:bottom-6 sm:right-6 sm:w-96' : 'bottom-6 right-6 w-auto'}`}>
         
-        {/* Chat Window */}
         {isChatOpen && (
            <div className="w-full h-[100dvh] sm:h-[600px] bg-museum-950 sm:bg-museum-900/95 sm:backdrop-blur-xl sm:border border-museum-700 shadow-2xl sm:rounded-sm flex flex-col animate-in slide-in-from-bottom-10 fade-in duration-300">
-              {/* Header */}
               <div className="bg-museum-950 p-4 border-b border-museum-800 flex items-center justify-between pt-safe-top sm:pt-4">
                 <div className="flex items-center gap-3">
                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -318,7 +291,6 @@ function App() {
                 </button>
               </div>
 
-              {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-museum-700 scrollbar-track-transparent bg-museum-950/50">
                  {chatHistory.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -343,19 +315,18 @@ function App() {
                  <div ref={chatEndRef} />
               </div>
 
-              {/* Input */}
-              <form onSubmit={handleChatSubmit} className="p-3 bg-museum-950 border-t border-museum-800 flex gap-2 pb-safe-bottom sm:pb-3">
+              <form onSubmit={handleChatSubmit} className="p-3 pt-5 pb-8 bg-museum-950 border-t border-museum-800 flex gap-4 pb-safe-bottom sm:pb-3">
                  <input 
                    type="text" 
                    value={chatInput}
                    onChange={(e) => setChatInput(e.target.value)}
                    placeholder={t.chatInput}
-                   className="flex-1 bg-museum-900 border border-museum-800 rounded px-3 py-3 sm:py-2 text-base sm:text-sm text-museum-ivory focus:border-museum-gold focus:outline-none font-sans placeholder-museum-700 appearance-none"
+                   className="flex-1 bg-museum-900 border border-museum-800 rounded px-3 py-1.5 md:py-3 sm:py-2 text-base sm:text-sm text-museum-ivory focus:border-museum-gold focus:outline-none font-serif placeholder-museum-700 appearance-none"
                  />
                  <button 
                    type="submit" 
                    disabled={isChatThinking || !chatInput.trim()}
-                   className="bg-museum-gold text-museum-950 px-4 sm:px-3 py-2 rounded hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xs uppercase tracking-wider whitespace-nowrap"
+                   className="bg-museum-gold text-museum-950 px-4 sm:px-3 py-2 rounded hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-serif font-bold text-xs uppercase tracking-wider whitespace-nowrap"
                  >
                    {t.chatSend}
                  </button>
@@ -363,7 +334,6 @@ function App() {
            </div>
         )}
 
-        {/* Toggle Button */}
         <button 
           onClick={() => setIsChatOpen(!isChatOpen)}
           className={`group flex items-center gap-3 bg-museum-ivory text-museum-950 pl-4 pr-2 py-2 rounded-full shadow-lg hover:bg-white transition-all duration-300 absolute right-0 bottom-0 whitespace-nowrap ${isChatOpen ? 'opacity-0 pointer-events-none translate-y-10' : 'opacity-100 translate-y-0'}`}
@@ -375,6 +345,8 @@ function App() {
         </button>
       </div>
 
+      <PWAInstallPrompt language={language} />
+      <OfflineIndicator language={language} />
     </div>
   );
 }

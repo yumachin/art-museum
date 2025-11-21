@@ -3,8 +3,7 @@
 // ============================================
 
 import { ArtworkRow, ArtworkUploadMetadata, TranslationRow } from '../types';
-import { getSupabaseClient, isSupabaseConfigured } from './supabaseClient';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from './supabaseClient';
 
 // ============================================
 // MOCK DATA (Fallback when Supabase not configured)
@@ -104,49 +103,27 @@ const MOCK_DB_ARTWORKS: ArtworkRow[] = [
 // ============================================
 // MUSEUM SERVICE API
 // ============================================
-
 export const museumService = {
-  /**
-   * Fetch all public artworks from database.
-   * Falls back to mock data if Supabase not configured.
-   */
   getArtworks: async (): Promise<ArtworkRow[]> => {
     const supabase = getSupabaseClient();
-
-    if (!supabase) {
-      console.warn('⚠️ Supabase not configured - Using MOCK data');
-      console.info('💡 To use real database: Create .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
-      await new Promise(resolve => setTimeout(resolve, 800));
-      return [...MOCK_DB_ARTWORKS];
-    }
-
-    console.log('🔄 Fetching artworks from Supabase...');
+    console.log('🔄 Supabase から収蔵作品をフェッチしています。');
     
     try {
       const { data, error } = await supabase
         .from('artworks')
         .select('*')
-        .eq('is_public', true)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Supabase query error:', error);
+        console.error('❌ Supabase のクエリエラーは次のとおりです。:', error);
         throw error;
       }
-
-      console.log(`✅ Successfully fetched ${data?.length || 0} artworks from Supabase`);
-      
-      if (!data || data.length === 0) {
-        console.warn('⚠️ No artworks found in database. Falling back to MOCK data.');
-        return [...MOCK_DB_ARTWORKS];
-      }
+      console.log(`✅ ${data?.length || 0} 点の収蔵作品のフェッチに成功！`);
 
       return data;
     } catch (error) {
-      console.error('❌ Failed to fetch artworks from Supabase:', error);
-      console.info('📦 Falling back to MOCK data');
-      // Fallback to mock on error
-      return [...MOCK_DB_ARTWORKS];
+      console.error('❌ Supabase からのデータフェッチに失敗。：', error);
+      throw error;
     }
   },
 
