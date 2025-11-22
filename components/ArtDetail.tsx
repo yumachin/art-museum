@@ -125,7 +125,7 @@ const ArtDetail: React.FC<ArtDetailProps> = ({ artwork, onBack, language, texts 
 
               </div>
             ) : (
-               <div className="text-museum-muted">{texts.analysisUnavailable}</div>
+               <div className="text-museum-muted font-serif">{texts.analysisUnavailable}</div>
             )}
           </div>
         </div>

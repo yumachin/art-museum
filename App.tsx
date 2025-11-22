@@ -131,7 +131,7 @@ function App() {
   }, [chatHistory, isChatOpen]);
 
   return (
-    <div className="min-h-screen bg-museum-950 font-sans selection:bg-museum-gold selection:text-museum-ivory">
+    <div className="min-h-screen bg-museum-950 font-sans selection:bg-museum-gold selection:text-museum-ivory pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
       
       {viewState === ViewState.GALLERY && (
         <nav className="sticky top-0 w-full z-40 bg-museum-950/90 backdrop-blur-md border-b border-museum-800 transition-all duration-500">
@@ -226,18 +226,18 @@ function App() {
                     className="group cursor-pointer flex flex-col gap-4"
                   >
                     <div className="relative aspect-[3/4] overflow-hidden bg-museum-900 border border-museum-800 shadow-2xl transition-all duration-500 group-hover:border-museum-gold/50">
-                        <img 
-                          src={art.thumbnailUrl} 
-                          alt={art.title} 
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 grayscale-[20%] group-hover:grayscale-0"
-                          loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-museum-950/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
-                          <span className="text-museum-gold text-xs tracking-widest uppercase font-bold flex items-center gap-2">
-                            <IconSparkles className="w-4 h-4" />
-                            {t.analyzeBtn}
-                          </span>
-                        </div>
+                      <img 
+                        src={art.thumbnailUrl} 
+                        alt={art.title} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 grayscale-[20%] group-hover:grayscale-0"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-museum-950/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                        <span className="text-museum-gold text-xs tracking-widest uppercase font-bold flex items-center gap-2">
+                          <IconSparkles className="w-4 h-4" />
+                          {t.analyzeBtn}
+                        </span>
+                      </div>
                     </div>
                     <div className="text-center md:text-left">
                         <h3 className={`font-display ${art.title.length >= 24 ? "text-xs" : art.title.length >= 21 ? "text-sm" : art.title.length >= 17 ? "text-md" : art.title.length >= 13 ? "text-lg" : art.title.length >= 5 ? "text-xl" : "text-2xl"} text-museum-ivory group-hover:text-museum-gold transition-colors duration-300 ${language === 'ja' ? 'font-serif font-bold' : ''}`}>
