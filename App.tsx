@@ -134,7 +134,7 @@ function App() {
     <div className="min-h-screen bg-museum-950 font-sans selection:bg-museum-gold selection:text-museum-ivory">
       
       {viewState === ViewState.GALLERY && (
-        <nav className="fixed top-0 w-full z-40 bg-museum-950/90 backdrop-blur-md border-b border-museum-800 transition-all duration-500">
+        <nav className="sticky top-0 w-full z-40 bg-museum-950/90 backdrop-blur-md border-b border-museum-800 transition-all duration-500">
           <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-20 flex items-center justify-between">
              <div className="flex items-center gap-4">
                <div className="w-8 h-8 bg-museum-gold rounded-sm flex items-center justify-center text-museum-950 font-serif font-bold text-xl">A</div>
