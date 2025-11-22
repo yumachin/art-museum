@@ -14,42 +14,8 @@ export default defineConfig(({ mode }) => {
         react(),
         VitePWA({
           registerType: 'autoUpdate',
-          includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
-          manifest: {
-            name: 'Art Museum - Digital Gallery',
-            short_name: 'Art Museum',
-            description: 'The Grand Archives - Explore centuries of human expression through curated masterpieces',
-            theme_color: '#0c0a09',
-            background_color: '#0c0a09',
-            display: 'standalone',
-            orientation: 'portrait',
-            scope: '/',
-            start_url: '/',
-            icons: [
-              {
-                src: '/pwa-64x64.png',
-                sizes: '64x64',
-                type: 'image/png'
-              },
-              {
-                src: '/pwa-192x192.png',
-                sizes: '192x192',
-                type: 'image/png'
-              },
-              {
-                src: '/pwa-512x512.png',
-                sizes: '512x512',
-                type: 'image/png',
-                purpose: 'any'
-              },
-              {
-                src: '/maskable-icon-512x512.png',
-                sizes: '512x512',
-                type: 'image/png',
-                purpose: 'maskable'
-              }
-            ]
-          },
+          includeAssets: ['favicon.ico', 'robots.txt', '*.png'],
+          manifest: false, // public/manifest.jsonを使用
           workbox: {
             // キャッシュ戦略の設定
             runtimeCaching: [
@@ -121,7 +87,7 @@ export default defineConfig(({ mode }) => {
             globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
           },
           devOptions: {
-            enabled: true, // 開発中もPWAを有効化
+            enabled: false, // 開発中はPWAを無効化（本番ビルド時のみ有効）
             type: 'module'
           }
         })
