@@ -13,7 +13,6 @@ export const fetchArtworkDetails = async (artwork: Artwork, language: Language =
   const ai = getClient();
   if (!ai) return null;
 
-  // Artwork object is already localized by the UI layer, but we can use raw data if needed for context
   const title = artwork.title;
   const artist = artwork.artist;
 
@@ -45,14 +44,14 @@ export const fetchArtworkDetails = async (artwork: Artwork, language: Language =
       config: {
         responseMimeType: "application/json",
         responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-                fullDescription: { type: Type.STRING },
-                technicalAnalysis: { type: Type.STRING },
-                historicalContext: { type: Type.STRING },
-                symbolism: { type: Type.STRING }
-            },
-            required: ["fullDescription", "technicalAnalysis", "historicalContext", "symbolism"]
+          type: Type.OBJECT,
+          properties: {
+            fullDescription: { type: Type.STRING },
+            technicalAnalysis: { type: Type.STRING },
+            historicalContext: { type: Type.STRING },
+            symbolism: { type: Type.STRING }
+          },
+          required: ["fullDescription", "technicalAnalysis", "historicalContext", "symbolism"]
         }
       }
     });
@@ -69,7 +68,7 @@ export const fetchArtworkDetails = async (artwork: Artwork, language: Language =
     }
     return null;
   } catch (error) {
-    console.error("Error fetching details:", error);
+    console.error("絵画詳細の生成に失敗。", error);
     return null;
   }
 };

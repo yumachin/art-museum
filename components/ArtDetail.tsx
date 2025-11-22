@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Artwork, ArtworkDetail, Language, Translations } from '../types';
 import { fetchArtworkDetails } from '../services/geminiService';
@@ -17,7 +16,6 @@ const ArtDetail: React.FC<ArtDetailProps> = ({ artwork, onBack, language, texts 
   const [loading, setLoading] = useState(true);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
-  // The 'artwork' prop is already localized by the parent
   const displayTitle = artwork.title;
   const displayArtist = artwork.artist;
   const displayPeriod = artwork.period;
@@ -30,7 +28,6 @@ const ArtDetail: React.FC<ArtDetailProps> = ({ artwork, onBack, language, texts 
       setLoading(false);
     };
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artwork.id, language]);
 
   return (
@@ -43,11 +40,10 @@ const ArtDetail: React.FC<ArtDetailProps> = ({ artwork, onBack, language, texts 
         onClose={() => setIsViewerOpen(false)}
       />
 
-      {/* Header Navigation */}
-      <div className="fixed top-0 left-0 w-full p-6 z-40 bg-gradient-to-b from-museum-950 to-transparent pointer-events-none">
+      <div className="fixed top-0 left-0 w-full p-4 md:p-6 z-40 bg-gradient-to-b from-museum-950 to-transparent pointer-events-none">
         <button 
           onClick={onBack}
-          className="pointer-events-auto flex items-center gap-2 text-museum-ivory/60 hover:text-museum-gold transition-colors duration-300 uppercase tracking-widest text-xs font-bold font-sans backdrop-blur-md bg-museum-950/30 px-3 py-1 rounded-full border border-white/5"
+          className="pointer-events-auto flex items-center gap-2 text-museum-ivory/60 hover:text-museum-gold transition-colors duration-300 uppercase tracking-widest text-xs font-bold font-serif backdrop-blur-md bg-museum-950/30 px-3 py-1 rounded-full border border-white/5"
         >
           <IconArrowLeft className="w-4 h-4" />
           {texts.returnGallery}
@@ -55,7 +51,6 @@ const ArtDetail: React.FC<ArtDetailProps> = ({ artwork, onBack, language, texts 
       </div>
 
       <div className="flex flex-col lg:flex-row min-h-screen">
-        {/* Image Section */}
         <div className="w-full lg:w-1/2 h-[50vh] lg:h-screen sticky top-0 bg-museum-900 flex items-center justify-center overflow-hidden border-r border-museum-800 group">
            <div 
              className="relative w-full h-full cursor-zoom-in"
@@ -68,47 +63,43 @@ const ArtDetail: React.FC<ArtDetailProps> = ({ artwork, onBack, language, texts 
              />
              <div className="absolute inset-0 bg-black/20 mix-blend-overlay pointer-events-none"></div>
              
-             {/* Hint for click */}
              <div className="absolute bottom-6 right-6 bg-black/50 backdrop-blur text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 border border-white/20">
                <IconMaximize className="w-5 h-5" />
              </div>
            </div>
         </div>
 
-        {/* Info Section */}
         <div className="w-full lg:w-1/2 p-8 lg:p-24 flex flex-col justify-center bg-museum-950">
-          <div className="max-w-2xl mx-auto">
-            
-            {/* Title Block */}
-            <div className="mb-12 border-b border-museum-800 pb-8">
-              <span className="block font-sans text-museum-gold uppercase tracking-[0.2em] text-sm mb-4">
+          <div className="max-w-2xl mr-auto">
+            <div className="mb-2 md:mb-12 border-b border-museum-800 pb-6 md:pb-8">
+              <span className="block font-serif text-museum-gold uppercase tracking-[0.2em] text-sm mb-4">
                 {displayPeriod} • {artwork.year}
               </span>
-              <h1 className={`font-display text-4xl lg:text-6xl leading-tight mb-4 text-museum-ivory ${language === 'ja' ? 'font-serif' : ''}`}>
+              <h1 className={`${displayTitle.length >= 24 ? "text-xs" : displayTitle.length >= 21 ? "text-sm" : displayTitle.length >= 19 ? "text-md" : displayTitle.length >= 14 ? "text-xl" : displayTitle.length >= 11 ? "text-2xl" : displayTitle.length >= 8 ? "text-3xl" : "text-4xl"} lg:text-6xl leading-tight mb-4 text-museum-ivory ${language === 'ja' ? 'font-serif' : 'font-display'}`}>
                 {displayTitle}
               </h1>
-              <h2 className="font-serif italic text-2xl text-museum-muted">{displayArtist}</h2>
+              <h2 className={`${displayArtist.length >= 19 ? "text-xs" : displayArtist.length >= 14 ? "text-sm" : displayArtist.length >= 11 ? "text-md" : displayArtist.length >= 8 ? "text-lg" : "text-xl"} font-serif italic text-museum-muted`}>{displayArtist}</h2>
             </div>
 
             {loading ? (
               <div className="space-y-6 animate-pulse">
-                <div className="h-4 bg-museum-800 w-full rounded"></div>
-                <div className="h-4 bg-museum-800 w-5/6 rounded"></div>
-                <div className="h-4 bg-museum-800 w-4/6 rounded"></div>
-                <div className="flex items-center gap-2 text-museum-gold mt-8">
+                <div className="flex items-center gap-2 text-museum-gold mt-4 md:mt-8">
                    <IconSparkles className="w-5 h-5 animate-spin" />
                    <span className="text-sm font-sans tracking-widest">{texts.analyzing}</span>
                 </div>
+                <div className="h-4 bg-museum-800 w-full rounded"></div>
+                <div className="h-4 bg-museum-800 w-5/6 rounded"></div>
+                <div className="h-4 bg-museum-800 w-4/6 rounded"></div>
               </div>
             ) : details ? (
-              <div className={`space-y-12 font-serif text-lg leading-relaxed text-museum-ivory/90 ${language === 'ja' ? 'tracking-wide' : ''}`}>
+              <div className={`space-y-12 mb-12 md:mb-8 font-serif text-lg leading-relaxed text-museum-ivory/90 ${language === 'ja' ? 'tracking-wide' : ''}`}>
                 
                 <section>
-                  <h3 className="font-sans text-xs font-bold uppercase tracking-widest text-museum-gold mb-4 flex items-center gap-2">
+                  <h3 className="font-sans text-xs font-bold uppercase tracking-widest text-museum-gold my-4 flex items-center gap-2">
                     <span className="w-8 h-[1px] bg-museum-gold inline-block"></span>
                     {texts.visualDesc}
                   </h3>
-                  <p>{details.fullDescription}</p>
+                  <p className='text-sm md:text-base'>{details.fullDescription}</p>
                 </section>
 
                 <section>
@@ -116,7 +107,7 @@ const ArtDetail: React.FC<ArtDetailProps> = ({ artwork, onBack, language, texts 
                     <span className="w-8 h-[1px] bg-museum-gold inline-block"></span>
                     {texts.techAnalysis}
                   </h3>
-                  <p>{details.technicalAnalysis}</p>
+                  <p className='text-sm md:text-base'>{details.technicalAnalysis}</p>
                 </section>
 
                 <section>
@@ -124,17 +115,17 @@ const ArtDetail: React.FC<ArtDetailProps> = ({ artwork, onBack, language, texts 
                      <span className="w-8 h-[1px] bg-museum-gold inline-block"></span>
                      {texts.histContext}
                   </h3>
-                  <p>{details.historicalContext}</p>
+                  <p className='text-sm md:text-base'>{details.historicalContext}</p>
                 </section>
 
                 <section className="bg-museum-900/50 p-8 border-l-2 border-museum-gold">
                   <h3 className="font-sans text-xs font-bold uppercase tracking-widest text-museum-gold mb-2">{texts.symbolism}</h3>
-                  <p className="italic text-museum-muted">{details.symbolism}</p>
+                  <p className="italic text-museum-muted text-sm md:text-base">{details.symbolism}</p>
                 </section>
 
               </div>
             ) : (
-               <div className="text-museum-muted">Analysis unavailable.</div>
+               <div className="text-museum-muted">{texts.analysisUnavailable}</div>
             )}
           </div>
         </div>

@@ -39,6 +39,9 @@ function App() {
       setIsLoading(true);
       try {
         const rows = await museumService.getArtworks();
+        if (rows) {
+          rows.sort((a, b) => Number(a.year_created) - Number(b.year_created));
+        }
         setRawArtworks(rows);
       } catch (error) {
         console.error(error);
@@ -237,10 +240,10 @@ function App() {
                         </div>
                     </div>
                     <div className="text-center md:text-left">
-                        <h3 className={`font-display ${art.title.length >= 20 ? "text-md" : art.title.length >= 16 ? "text-lg" : "text-xl"} text-museum-ivory group-hover:text-museum-gold transition-colors duration-300 ${language === 'ja' ? 'font-serif font-bold' : ''}`}>
+                        <h3 className={`font-display ${art.title.length >= 24 ? "text-xs" : art.title.length >= 21 ? "text-sm" : art.title.length >= 17 ? "text-md" : art.title.length >= 13 ? "text-lg" : art.title.length >= 5 ? "text-xl" : "text-2xl"} text-museum-ivory group-hover:text-museum-gold transition-colors duration-300 ${language === 'ja' ? 'font-serif font-bold' : ''}`}>
                           {art.title}
                         </h3>
-                        <p className={`font-serif ${art.artist.length >= 20 ? "text-xs" : art.title.length >= 16 ? "text-sm" : "text-md"} text-museum-muted italic`}>{art.artist}, {art.year}</p>
+                        <p className={`font-serif ${art.artist.length >= 18 ? "text-xs" : art.title.length >= 8 ? "text-sm" : "text-md"} text-museum-muted italic`}>{art.artist}, {art.year}</p>
                     </div>
                   </div>
                 ))}
@@ -336,7 +339,7 @@ function App() {
 
         <button 
           onClick={() => setIsChatOpen(!isChatOpen)}
-          className={`group flex items-center gap-3 bg-museum-ivory text-museum-950 pl-4 pr-2 py-2 rounded-full shadow-lg hover:bg-white transition-all duration-300 absolute right-0 bottom-0 whitespace-nowrap ${isChatOpen ? 'opacity-0 pointer-events-none translate-y-10' : 'opacity-100 translate-y-0'}`}
+          className={`group flex items-center gap-3 bg-museum-ivory text-museum-950 mb-4 pl-4 pr-2 py-2 rounded-full shadow-lg hover:bg-white transition-all duration-300 absolute right-0 bottom-0 whitespace-nowrap ${isChatOpen ? 'opacity-0 pointer-events-none translate-y-10' : 'opacity-100 translate-y-0'}`}
         >
            <span className="font-display font-bold tracking-wider text-xs">{t.askCurator}</span>
            <div className="bg-museum-950 text-museum-ivory p-1.5 rounded-full group-hover:rotate-12 transition-transform">

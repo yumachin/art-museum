@@ -5,9 +5,6 @@ export enum ViewState {
 }
 export type Language = 'en' | 'ja';
 
-// ============================================
-// DATABASE SCHEMA TYPES (Supabase Response)
-// ============================================
 export interface ArtworkRow {
   id: string;
   // insert 時点では存在しないから
@@ -48,9 +45,6 @@ export interface ArtworkUploadMetadata {
   description_ja?: string;
 }
 
-// ============================================
-// UI DISPLAY TYPES
-// ============================================
 export interface Artwork {
   id: string;
   title: string;
@@ -62,9 +56,6 @@ export interface Artwork {
   raw: ArtworkRow;
 }
 
-/**
- * Extended artwork with AI-generated analysis
- */
 export interface ArtworkDetail extends Artwork {
   fullDescription: string;
   technicalAnalysis: string;
@@ -84,9 +75,6 @@ export interface FilterState {
   artist: string | null;
 }
 
-// ============================================
-// LOCALIZATION TYPES
-// ============================================
 export interface Translations {
   title: string;
   subtitle: string;
@@ -95,6 +83,7 @@ export interface Translations {
   noResults: string;
   returnGallery: string;
   analyzing: string;
+  analysisUnavailable: string;
   visualDesc: string;
   techAnalysis: string;
   histContext: string;
@@ -137,10 +126,6 @@ export interface TranslationRow {
   created_at?: string;
 }
 
-// ============================================
-// TRANSLATIONS (Static)
-// ============================================
-
 // Record<キーの型, 値の型> → 辞書作る！
 export const DEFAULT_TEXTS: Record<Language, Translations> = {
   en: {
@@ -149,8 +134,9 @@ export const DEFAULT_TEXTS: Record<Language, Translations> = {
     intro: "Wander through centuries of human expression. Each piece is a window into the soul of its era, curated for the discerning intellect.",
     searchPlaceholder: "Search archives...",
     noResults: "No masterpieces found in the archives.",
-    returnGallery: "Return to Gallery",
+    returnGallery: "Return",
     analyzing: "THE ARCHIVIST IS ANALYZING...",
+    analysisUnavailable: "Analysis unavailable.",
     visualDesc: "I. Visual Description",
     techAnalysis: "II. Technical Analysis",
     histContext: "III. Historical Context",
@@ -182,13 +168,14 @@ export const DEFAULT_TEXTS: Record<Language, Translations> = {
     errorUploading: "Failed to archive artwork. Please try again."
   },
   ja: {
-    title: "アートミュージアム",
+    title: "ART MUSEUM",
     subtitle: "大回廊アーカイブ",
     intro: "数世紀にわたる人類の表現の旅へ。知的好奇心を満たすために厳選された、魂の窓としての名画をご堪能ください。",
     searchPlaceholder: "収蔵品を検索...",
     noResults: "該当する作品は見つかりませんでした。",
     returnGallery: "戻る",
     analyzing: "AI 学芸員が分析中...",
+    analysisUnavailable: "分析に失敗しました。",
     visualDesc: "I. 視覚的特徴",
     techAnalysis: "II. 技法と素材",
     histContext: "III. 歴史的背景",
@@ -208,7 +195,7 @@ export const DEFAULT_TEXTS: Record<Language, Translations> = {
     formCancel: "キャンセル",
     welcomeMessage: "ようこそ、アートミュージアムへ。主任学芸員です。本日はどのようなご案内をいたしましょうか？",
     analyzeBtn: "詳細を見る",
-    est: "2025年",
+    est: "Est. 2025",
     filterTitle: "収蔵品の絞り込み",
     filterPeriod: "時代・様式",
     filterArtist: "作者",
@@ -220,10 +207,6 @@ export const DEFAULT_TEXTS: Record<Language, Translations> = {
     errorUploading: "作品の収蔵に失敗しました。もう一度お試しください。"
   }
 };
-
-// ============================================
-// HELPER: Localize Artwork Row
-// ============================================
 
 export const localizeArtwork = (row: ArtworkRow, language: Language): Artwork => {
   return {
@@ -256,6 +239,7 @@ export const buildTranslations = (rows: TranslationRow[], language: Language): T
     noResults: map.get('noResults') || defaults.noResults,
     returnGallery: map.get('returnGallery') || defaults.returnGallery,
     analyzing: map.get('analyzing') || defaults.analyzing,
+    analysisUnavailable: map.get('analysisUnavailable') || defaults.analysisUnavailable,
     visualDesc: map.get('visualDesc') || defaults.visualDesc,
     techAnalysis: map.get('techAnalysis') || defaults.techAnalysis,
     histContext: map.get('histContext') || defaults.histContext,

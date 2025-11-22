@@ -1,7 +1,3 @@
-// ============================================
-// MUSEUM SERVICE - Dynamic Data Fetching
-// ============================================
-
 import { ArtworkRow, ArtworkUploadMetadata, TranslationRow } from '../types';
 import { getSupabaseClient } from './supabaseClient';
 
