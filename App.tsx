@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Artwork, ViewState, ChatMessage, Language, DEFAULT_TEXTS, FilterState, ArtworkRow, localizeArtwork } from './types';
+import { Artwork, ViewState, ChatMessage, Language, DEFAULT_TEXTS, FilterState, ArtworkRow, localizeArtwork, SortField, SortOrder, PageSize } from './types';
 import ArtDetail from './components/ArtDetail';
 import AddArtworkModal from './components/AddArtworkModal';
 import FilterSheet from './components/FilterSheet';
+import Pagination from './components/Pagination';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import OfflineIndicator from './components/OfflineIndicator';
-import { chatWithCurator } from './services/geminiService';
+import { chatWithCurator, isGeminiRateLimitError } from './services/geminiService';
 import { museumService } from './services/museumService';
 import { IconSearch, IconMessageCircle, IconX, IconSparkles, IconGlobe, IconPlus } from './components/Icons';
 
@@ -24,8 +25,14 @@ function App() {
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('year');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [pageSize, setPageSize] = useState<PageSize>(10);
+  const [currentPage, setCurrentPage] = useState(1);
   
   const t = DEFAULT_TEXTS[language];
+
+  const [lastScrollPosition, setLastScrollPosition] = useState<number | null>(null);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
@@ -39,9 +46,6 @@ function App() {
       setIsLoading(true);
       try {
         const rows = await museumService.getArtworks();
-        if (rows) {
-          rows.sort((a, b) => Number(a.year_created) - Number(b.year_created));
-        }
         setRawArtworks(rows);
       } catch (error) {
         console.error(error);
@@ -63,7 +67,7 @@ function App() {
   }, [language, chatHistory.length]);
 
   const filteredArtworks = useMemo(() => {
-    return localizedArtworks.filter((art: Artwork) => {
+    const filtered = localizedArtworks.filter((art: Artwork) => {
       const searchLower = filters.search.toLowerCase();
       const matchesSearch = 
          art.title.toLowerCase().includes(searchLower) || 
@@ -75,11 +79,70 @@ function App() {
   
       return true;
     });
-  }, [localizedArtworks, filters]);
+
+    const sorted = [...filtered];
+    const compareText = (a: string, b: string) =>
+      a.localeCompare(b, language === 'ja' ? 'ja' : 'en', { sensitivity: 'base' });
+    const direction = sortOrder === 'asc' ? 1 : -1;
+
+    sorted.sort((a, b) => {
+      switch (sortField) {
+        case 'title':
+          return compareText(a.title, b.title) * direction;
+        case 'artist':
+          return compareText(a.artist, b.artist) * direction;
+        case 'added': {
+          const aTime = new Date(a.raw.created_at || 0).getTime();
+          const bTime = new Date(b.raw.created_at || 0).getTime();
+          return (aTime - bTime) * direction;
+        }
+        case 'year':
+        default:
+          return (Number(a.year) - Number(b.year)) * direction;
+      }
+    });
+
+    return sorted;
+  }, [localizedArtworks, filters, sortField, sortOrder, language]);
+
+  const sortFieldOptions: { value: SortField; label: string }[] = [
+    { value: 'year', label: t.sortFieldYear },
+    { value: 'title', label: t.sortFieldTitle },
+    { value: 'artist', label: t.sortFieldArtist },
+    { value: 'added', label: t.sortFieldAdded },
+  ];
+
+  const pageSizeOptions: PageSize[] = [10, 30, 50, 100];
+
+  const totalPages = Math.max(1, Math.ceil(filteredArtworks.length / pageSize));
+
+  const paginatedArtworks = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredArtworks.slice(start, start + pageSize);
+  }, [filteredArtworks, currentPage, pageSize]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, sortField, sortOrder, pageSize, language]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const activeFilterCount = (filters.period ? 1 : 0) + (filters.artist ? 1 : 0) + (filters.search ? 1 : 0);
 
+  useEffect(() => {
+    if (viewState === ViewState.GALLERY && lastScrollPosition !== null) {
+      setTimeout(() => {
+        window.scrollTo({ top: lastScrollPosition, behavior: 'smooth' });
+      }, 100);
+    }
+  }, [viewState, lastScrollPosition]);
+
   const handleArtClick = (art: Artwork) => {
+    setLastScrollPosition(window.scrollY);
     setSelectedArtwork(art);
     setViewState(ViewState.DETAIL);
     window.scrollTo(0, 0);
@@ -120,7 +183,10 @@ function App() {
       }
     } catch (error) {
         console.error(error);
-        setChatHistory((prev: ChatMessage[]) => [...prev, { role: 'model', text: language === 'ja' ? "申し訳ありません。学芸員への問い合わせに一時的な問題が発生しています。" : "Apologies, I am momentarily unable to access the archives. Please try again." }]);
+        const errorMessage = isGeminiRateLimitError(error)
+          ? t.rateLimitChat
+          : t.chatError;
+        setChatHistory((prev: ChatMessage[]) => [...prev, { role: 'model', text: errorMessage }]);
     } finally {
       setIsChatThinking(false);
     }
@@ -131,7 +197,7 @@ function App() {
   }, [chatHistory, isChatOpen]);
 
   return (
-    <div className="min-h-screen bg-museum-950 font-sans selection:bg-museum-gold selection:text-museum-ivory pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+    <div className={`min-h-screen bg-museum-950 font-sans selection:bg-museum-gold selection:text-museum-ivory ${viewState === ViewState.GALLERY ? 'pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]' : ''}`}>
       
       {viewState === ViewState.GALLERY && (
         <nav className="sticky top-0 w-full z-40 bg-museum-950/90 backdrop-blur-md border-b border-museum-800 transition-all duration-500">
@@ -212,6 +278,59 @@ function App() {
               </div>
             )}
 
+            {!isLoading && (
+              <div className="mb-6 md:mb-10 flex flex-row items-center gap-3 border-b border-museum-800 pb-4 overflow-x-auto">
+                <p className="font-serif text-museum-muted text-sm whitespace-nowrap shrink-0">
+                  <span className="text-museum-gold font-bold text-lg mr-0.5">
+                    {filteredArtworks.length}
+                  </span>
+                  {t.resultCount.replace('{count}', '')}
+                </p>
+                <div className="flex flex-row items-center gap-2 ml-auto shrink-0">
+                  <label htmlFor="sort-field" className="text-[10px] uppercase tracking-widest text-museum-muted whitespace-nowrap hidden sm:inline">
+                    {t.sortLabel}
+                  </label>
+                  <select
+                    id="sort-field"
+                    value={sortField}
+                    onChange={(e) => setSortField(e.target.value as SortField)}
+                    className="bg-museum-900 border border-museum-800 rounded px-2 py-1.5 text-xs sm:text-sm text-museum-ivory font-serif focus:outline-none focus:border-museum-gold transition-colors cursor-pointer"
+                  >
+                    {sortFieldOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    id="sort-order"
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                    aria-label={t.sortOrderLabel}
+                    className="bg-museum-900 border border-museum-800 rounded px-2 py-1.5 text-xs sm:text-sm text-museum-ivory font-serif focus:outline-none focus:border-museum-gold transition-colors cursor-pointer"
+                  >
+                    <option value="asc">{t.sortOrderAsc}</option>
+                    <option value="desc">{t.sortOrderDesc}</option>
+                  </select>
+                  <label htmlFor="page-size" className="text-[10px] uppercase tracking-widest text-museum-muted whitespace-nowrap hidden sm:inline">
+                    {t.pageSizeLabel}
+                  </label>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => setPageSize(Number(e.target.value) as PageSize)}
+                    aria-label={t.pageSizeLabel}
+                    className="bg-museum-900 border border-museum-800 rounded px-2 py-1.5 text-xs sm:text-sm text-museum-ivory font-serif focus:outline-none focus:border-museum-gold transition-colors cursor-pointer"
+                  >
+                    {pageSizeOptions.map((size) => (
+                      <option key={size} value={size}>
+                        {language === 'ja' ? `${size}件` : size}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
             {isLoading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-4">
                 <IconSparkles className="w-8 h-8 text-museum-gold animate-spin" />
@@ -219,7 +338,7 @@ function App() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
-                {filteredArtworks.map((art) => (
+                {paginatedArtworks.map((art) => (
                   <div 
                     key={art.id} 
                     onClick={() => handleArtClick(art)}
@@ -248,6 +367,16 @@ function App() {
                   </div>
                 ))}
               </div>
+            )}
+
+            {!isLoading && filteredArtworks.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                prevLabel={t.paginationPrev}
+                nextLabel={t.paginationNext}
+              />
             )}
 
             {!isLoading && filteredArtworks.length === 0 && (

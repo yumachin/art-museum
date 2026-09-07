@@ -1,6 +1,70 @@
 import { ArtworkRow, ArtworkUploadMetadata, TranslationRow } from '../types';
 import { getSupabaseClient } from './supabaseClient';
 
+const LOCAL_STORAGE_KEY = 'art-museum-local-artworks';
+
+const fileToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+const getLocalArtworks = (): ArtworkRow[] => {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveLocalArtwork = (row: ArtworkRow): void => {
+  const existing = getLocalArtworks();
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify([row, ...existing]));
+};
+
+const mergeArtworks = (...sources: ArtworkRow[][]): ArtworkRow[] => {
+  const seen = new Set<string>();
+  const merged: ArtworkRow[] = [];
+
+  for (const source of sources) {
+    for (const row of source) {
+      if (!seen.has(row.id)) {
+        seen.add(row.id);
+        merged.push(normalizeArtwork(row));
+      }
+    }
+  }
+
+  return merged;
+};
+
+const normalizeArtwork = (row: ArtworkRow): ArtworkRow => ({
+  ...row,
+  level: row.level ?? 3,
+});
+
+const createArtworkRow = (
+  imageUrl: string,
+  metadata: ArtworkUploadMetadata
+): ArtworkRow => ({
+  id: `local-${Date.now()}`,
+  created_at: new Date().toISOString(),
+  image_url: imageUrl,
+  title_en: metadata.title_en,
+  title_ja: metadata.title_ja || metadata.title_en,
+  artist_en: metadata.artist_en,
+  artist_ja: metadata.artist_ja || metadata.artist_en,
+  year_created: metadata.year_created,
+  period_en: metadata.period_en,
+  period_ja: metadata.period_ja || metadata.period_en,
+  level: metadata.level,
+  description_en: metadata.description_en || null,
+  description_ja: metadata.description_ja || null,
+});
+
 // ============================================
 // MOCK DATA (Fallback when Supabase not configured)
 // ============================================
@@ -102,8 +166,15 @@ const MOCK_DB_ARTWORKS: ArtworkRow[] = [
 export const museumService = {
   getArtworks: async (): Promise<ArtworkRow[]> => {
     const supabase = getSupabaseClient();
+    const localArtworks = getLocalArtworks();
+
+    if (!supabase) {
+      console.warn('📦 Supabase not configured — using local collection');
+      return mergeArtworks(localArtworks, MOCK_DB_ARTWORKS);
+    }
+
     console.log('🔄 Supabase から収蔵作品をフェッチしています。');
-    
+
     try {
       const { data, error } = await supabase
         .from('artworks')
@@ -114,12 +185,12 @@ export const museumService = {
         console.error('❌ Supabase のクエリエラーは次のとおりです。:', error);
         throw error;
       }
-      console.log(`✅ ${data?.length || 0} 点の収蔵作品のフェッチに成功！`);
 
-      return data;
+      console.log(`✅ ${data?.length || 0} 点の収蔵作品のフェッチに成功！`);
+      return mergeArtworks(data || [], localArtworks);
     } catch (error) {
-      console.error('❌ Supabase からのデータフェッチに失敗。：', error);
-      throw error;
+      console.error('❌ Supabase からのデータフェッチに失敗。ローカルデータを使用します：', error);
+      return mergeArtworks(localArtworks, MOCK_DB_ARTWORKS);
     }
   },
 
@@ -163,58 +234,44 @@ export const museumService = {
   ): Promise<ArtworkRow> => {
     const supabase = getSupabaseClient();
 
-    // Mock Mode
+    const saveLocally = async (): Promise<ArtworkRow> => {
+      const imageUrl = await fileToDataUrl(file);
+      const newRow = createArtworkRow(imageUrl, metadata);
+      saveLocalArtwork(newRow);
+      MOCK_DB_ARTWORKS.unshift(newRow);
+      console.log('✅ Saved artwork locally:', newRow.title_en);
+      return newRow;
+    };
+
     if (!supabase) {
       console.warn('📦 MOCK upload - Supabase not configured');
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      const newId = Date.now().toString();
-      const fakeUrl = URL.createObjectURL(file);
-
-      const newRow: ArtworkRow = {
-        id: newId,
-        created_at: new Date().toISOString(),
-        image_url: fakeUrl,
-        title_en: metadata.title_en,
-        title_ja: metadata.title_ja || null,
-        artist_en: metadata.artist_en,
-        artist_ja: metadata.artist_ja || null,
-        year_created: metadata.year_created,
-        period_en: metadata.period_en,
-        period_ja: metadata.period_ja || null,
-        description_en: metadata.description_en || null,
-        description_ja: metadata.description_ja || null,
-      };
-
-      MOCK_DB_ARTWORKS.unshift(newRow);
-      console.log('✅ Added to MOCK database:', newRow.title_en);
-      return newRow;
+      await new Promise(resolve => setTimeout(resolve, 800));
+      return saveLocally();
     }
 
-    // Real Supabase Upload
     console.log('🔄 Uploading to Supabase...');
-    
+
     try {
-      // 1. Upload to Storage
-      const fileName = `${Date.now()}-${file.name}`;
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${Date.now()}.${fileExt}`;
       console.log(`📤 Uploading file: ${fileName}`);
-      
-      const { data: uploadData, error: uploadError } = await supabase
+
+      const { error: uploadError } = await supabase
         .storage
         .from('artworks')
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
+          contentType: file.type || 'image/jpeg',
         });
 
       if (uploadError) {
         console.error('❌ Storage upload error:', uploadError);
         throw uploadError;
       }
-      
+
       console.log('✅ File uploaded to storage');
 
-      // 2. Get Public URL
       const { data: urlData } = supabase
         .storage
         .from('artworks')
@@ -223,9 +280,8 @@ export const museumService = {
       const imageUrl = urlData.publicUrl;
       console.log('🔗 Public URL:', imageUrl);
 
-      // 3. Insert into Database
       console.log('💾 Inserting into database...');
-      const { data: insertData, error: insertError } = await (supabase as any)
+      const { data: insertData, error: insertError } = await supabase
         .from('artworks')
         .insert({
           image_url: imageUrl,
@@ -238,6 +294,7 @@ export const museumService = {
           period_ja: metadata.period_ja || null,
           description_en: metadata.description_en || null,
           description_ja: metadata.description_ja || null,
+          level: metadata.level,
           is_public: true,
         })
         .select()
@@ -251,8 +308,8 @@ export const museumService = {
       console.log('✅ Successfully uploaded artwork:', insertData?.title_en);
       return insertData as ArtworkRow;
     } catch (error) {
-      console.error('❌ Upload failed:', error);
-      throw new Error('Failed to upload artwork to museum archives.');
+      console.error('❌ Supabase upload failed, saving locally instead:', error);
+      return saveLocally();
     }
   },
 

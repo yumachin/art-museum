@@ -27,6 +27,7 @@ export interface Database {
           period_en: string
           period_ja: string | null
           year_created: string
+          level: number
           description_en: string | null
           description_ja: string | null
           is_public: boolean | null
@@ -43,6 +44,7 @@ export interface Database {
           period_en: string
           period_ja?: string | null
           year_created: string
+          level?: number
           description_en?: string | null
           description_ja?: string | null
           is_public?: boolean | null
@@ -59,6 +61,7 @@ export interface Database {
           period_en?: string
           period_ja?: string | null
           year_created?: string
+          level?: number
           description_en?: string | null
           description_ja?: string | null
           is_public?: boolean | null
