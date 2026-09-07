@@ -24,13 +24,18 @@ const Pagination: React.FC<PaginationProps> = ({
     return Math.abs(page - currentPage) <= 1;
   });
 
+  const handlePageChange = (page: number) => {
+    onPageChange(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <nav
       className="flex items-center justify-center gap-1 mt-12 mb-4"
       aria-label="Pagination"
     >
       <button
-        onClick={() => onPageChange(currentPage - 1)}
+        onClick={() => handlePageChange(currentPage - 1)}
         disabled={currentPage <= 1}
         className="px-3 py-1.5 text-xs uppercase tracking-widest font-bold text-museum-muted border border-museum-800 rounded hover:text-museum-gold hover:border-museum-gold/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
@@ -47,7 +52,7 @@ const Pagination: React.FC<PaginationProps> = ({
               <span className="px-2 text-museum-muted font-serif">…</span>
             )}
             <button
-              onClick={() => onPageChange(page)}
+              onClick={() => handlePageChange(page)}
               aria-current={page === currentPage ? 'page' : undefined}
               className={`min-w-[2rem] px-2 py-1.5 text-sm font-serif rounded border transition-colors ${
                 page === currentPage
@@ -62,7 +67,7 @@ const Pagination: React.FC<PaginationProps> = ({
       })}
 
       <button
-        onClick={() => onPageChange(currentPage + 1)}
+        onClick={() => handlePageChange(currentPage + 1)}
         disabled={currentPage >= totalPages}
         className="px-3 py-1.5 text-xs uppercase tracking-widest font-bold text-museum-muted border border-museum-800 rounded hover:text-museum-gold hover:border-museum-gold/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >

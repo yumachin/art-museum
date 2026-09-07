@@ -231,7 +231,6 @@ const AddArtworkModal: React.FC<AddArtworkModalProps> = ({ isOpen, onClose, onAd
                       </option>
                     ))}
                   </select>
-                  <p className="mt-1 text-[10px] text-museum-muted font-serif">{texts.formLevelHint}</p>
                   {getErrorText('level') && (
                     <p className="mt-1 text-xs text-red-400 font-serif">{getErrorText('level')}</p>
                   )}

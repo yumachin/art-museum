@@ -200,7 +200,7 @@ function App() {
     <div className={`min-h-screen bg-museum-950 font-sans selection:bg-museum-gold selection:text-museum-ivory ${viewState === ViewState.GALLERY ? 'pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]' : ''}`}>
       
       {viewState === ViewState.GALLERY && (
-        <nav className="sticky top-0 w-full z-40 bg-museum-950/90 backdrop-blur-md border-b border-museum-800 transition-all duration-500">
+        <nav className="fixed top-0 left-0 right-0 w-full z-40 bg-museum-950/90 backdrop-blur-md border-b border-museum-800 transition-all duration-500">
           <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-20 flex items-center justify-between">
              <div className="flex items-center gap-4">
                <div className="w-8 h-8 bg-museum-gold rounded-sm flex items-center justify-center text-museum-950 font-serif font-bold text-xl">A</div>
@@ -251,7 +251,7 @@ function App() {
 
       <main className="relative">
         {viewState === ViewState.GALLERY ? (
-          <div className="pt-16 md:pt-24 md:pt-32 px-6 pb-24 max-w-7xl mx-auto animate-fade-in">
+          <div className="pt-32 md:pt-40 md:pt-48 px-6 pb-24 max-w-7xl mx-auto animate-fade-in">
             <header className={`${activeFilterCount > 0 ? "mb-8" : "mb-14"} md:mb-16 text-center`}>
                <span className="block font-serif italic text-museum-gold mb-4 text-xl md:text-3xl">{t.est}</span>
                <h2 className={`${language === 'ja' ? "font-serif" : "font-display"} text-3xl md:text-6xl text-museum-ivory mb-4 md:mb-6 tracking-wide leading-tight`}>{t.title}</h2>
