@@ -111,7 +111,6 @@ export interface Translations {
   formYear: string;
   formPeriod: string;
   formLevel: string;
-  formLevelHint: string;
   formSubmit: string;
   formCancel: string;
   welcomeMessage: string;
@@ -189,7 +188,6 @@ export const DEFAULT_TEXTS: Record<Language, Translations> = {
     formYear: "Year Created",
     formPeriod: "Art Period",
     formLevel: "Fame Level",
-    formLevelHint: "1 = lesser known, 5 = world-famous masterpiece",
     formSubmit: "Archive Work",
     formCancel: "Cancel",
     welcomeMessage: "Welcome to Art Museum. I am your curator. How may I assist you in your journey through art history today?",
@@ -253,7 +251,6 @@ export const DEFAULT_TEXTS: Record<Language, Translations> = {
     formYear: "制作年",
     formPeriod: "芸術様式・時代",
     formLevel: "有名度",
-    formLevelHint: "1 = あまり知られていない、5 = 世界的名画",
     formSubmit: "収蔵する",
     formCancel: "キャンセル",
     welcomeMessage: "ようこそ、アートミュージアムへ。主任学芸員です。本日はどのようなご案内をいたしましょうか？",
@@ -343,7 +340,6 @@ export const buildTranslations = (rows: TranslationRow[], language: Language): T
     formYear: map.get('formYear') || defaults.formYear,
     formPeriod: map.get('formPeriod') || defaults.formPeriod,
     formLevel: map.get('formLevel') || defaults.formLevel,
-    formLevelHint: map.get('formLevelHint') || defaults.formLevelHint,
     formSubmit: map.get('formSubmit') || defaults.formSubmit,
     formCancel: map.get('formCancel') || defaults.formCancel,
     welcomeMessage: map.get('welcomeMessage') || defaults.welcomeMessage,

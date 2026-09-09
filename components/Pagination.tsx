@@ -52,9 +52,13 @@ const Pagination: React.FC<PaginationProps> = ({
               <span className="px-2 text-museum-muted font-serif">…</span>
             )}
             <button
-              onClick={() => handlePageChange(page)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handlePageChange(page);
+              }}
               aria-current={page === currentPage ? 'page' : undefined}
-              className={`min-w-[2rem] px-2 py-1.5 text-sm font-serif rounded border transition-colors ${
+              className={`min-w-[2.5rem] px-2 py-2 text-sm font-serif rounded border transition-colors touch-manipulation select-none ${
                 page === currentPage
                   ? 'bg-museum-gold text-museum-950 border-museum-gold font-bold'
                   : 'text-museum-ivory border-museum-800 hover:border-museum-gold/50 hover:text-museum-gold'

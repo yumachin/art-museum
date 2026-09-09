@@ -137,6 +137,7 @@ function App() {
     if (viewState === ViewState.GALLERY && lastScrollPosition !== null) {
       setTimeout(() => {
         window.scrollTo({ top: lastScrollPosition, behavior: 'smooth' });
+        setLastScrollPosition(null); // ← リセットを追加
       }, 100);
     }
   }, [viewState, lastScrollPosition]);
