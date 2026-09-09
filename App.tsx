@@ -200,51 +200,51 @@ function App() {
     <div className={`min-h-screen bg-museum-950 font-sans selection:bg-museum-gold selection:text-museum-ivory ${viewState === ViewState.GALLERY ? 'pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]' : ''}`}>
       
       {viewState === ViewState.GALLERY && (
-        <nav className="fixed top-0 left-0 right-0 w-full z-40 bg-museum-950/90 backdrop-blur-md border-b border-museum-800 transition-all duration-500">
+        <nav className="fixed top-0 left-0 right-0 w-full z-40 bg-museum-950/90 backdrop-blur-md border-b border-museum-800 transition-all duration-500 pt-[max(0.5rem,env(safe-area-inset-top))]">
           <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-20 flex items-center justify-between">
-             <div className="flex items-center gap-4">
-               <div className="w-8 h-8 bg-museum-gold rounded-sm flex items-center justify-center text-museum-950 font-serif font-bold text-xl">A</div>
-               <span className="font-display text-xl tracking-[0.15em] text-museum-ivory hidden sm:block">{t.title}</span>
-             </div>
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 bg-museum-gold rounded-sm flex items-center justify-center text-museum-950 font-serif font-bold text-xl">A</div>
+              <span className="font-display text-xl tracking-[0.15em] text-museum-ivory hidden sm:block">{t.title}</span>
+            </div>
              
-             <div className="flex items-center gap-4 md:gap-6">
-                <div className="relative hidden md:block group">
-                   <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-museum-muted group-focus-within:text-museum-gold transition-colors" />
-                   <input 
-                     type="text" 
-                     placeholder={t.searchPlaceholder}
-                     value={filters.search}
-                     onChange={(e) => setFilters(prev => ({...prev, search: e.target.value}))}
-                     className="bg-museum-900 border border-museum-800 rounded-full py-2 pl-10 pr-4 text-sm text-museum-ivory placeholder-museum-700 focus:outline-none focus:border-museum-gold transition-all w-64"
-                   />
-                </div>
-                
-                <button
-                  onClick={() => setIsFilterOpen(true)}
-                  className="md:hidden text-museum-ivory hover:text-museum-gold transition-colors relative"
-                >
-                  <IconSearch className="w-5 h-5 md:w-6 md:h-6" />
-                  {activeFilterCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-museum-gold rounded-full border-2 border-museum-950"></span>
-                  )}
-                </button>
+            <div className="flex items-center gap-4 md:gap-6">
+              <div className="relative hidden md:block group">
+                <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-museum-muted group-focus-within:text-museum-gold transition-colors" />
+                <input 
+                  type="text" 
+                  placeholder={t.searchPlaceholder}
+                  value={filters.search}
+                  onChange={(e) => setFilters(prev => ({...prev, search: e.target.value}))}
+                  className="bg-museum-900 border border-museum-800 rounded-full py-2 pl-10 pr-4 text-sm text-museum-ivory placeholder-museum-700 focus:outline-none focus:border-museum-gold transition-all w-64"
+                />
+              </div>
+              
+              <button
+                onClick={() => setIsFilterOpen(true)}
+                className="md:hidden text-museum-ivory hover:text-museum-gold transition-colors relative"
+              >
+                <IconSearch className="w-5 h-5 md:w-6 md:h-6" />
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-museum-gold rounded-full border-2 border-museum-950"></span>
+                )}
+              </button>
 
-                <button 
-                  onClick={toggleLanguage}
-                  className="flex items-center gap-1.5 text-museum-ivory hover:text-museum-gold transition-colors border border-museum-800 rounded px-2 md:px-3 py-1 md:py-2"
-                >
-                   <IconGlobe className="w-4 h-4 md:w-5 md:h-5" />
-                   <span className="text-xs md:text-sm font-bold font-serif">{language === 'en' ? 'EN' : 'JP'}</span>
-                </button>
+              <button 
+                onClick={toggleLanguage}
+                className="flex items-center gap-1.5 text-museum-ivory hover:text-museum-gold transition-colors border border-museum-800 rounded px-2 md:px-3 py-1 md:py-2"
+              >
+                <IconGlobe className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="text-xs md:text-sm font-bold font-serif">{language === 'en' ? 'EN' : 'JP'}</span>
+              </button>
 
-                <button 
-                   onClick={() => setIsAddModalOpen(true)}
-                   className="text-museum-ivory hover:text-museum-gold transition-colors"
-                   aria-label={t.addArtwork}
-                >
-                   <IconPlus className="w-5 h-5 md:w-6 md:h-6" />
-                </button>
-             </div>
+              <button 
+                onClick={() => setIsAddModalOpen(true)}
+                className="text-museum-ivory hover:text-museum-gold transition-colors"
+                aria-label={t.addArtwork}
+              >
+                <IconPlus className="w-5 h-5 md:w-6 md:h-6" />
+              </button>
+            </div>
           </div>
         </nav>
       )}
@@ -253,28 +253,28 @@ function App() {
         {viewState === ViewState.GALLERY ? (
           <div className="pt-32 md:pt-40 md:pt-48 px-6 pb-24 max-w-7xl mx-auto animate-fade-in">
             <header className={`${activeFilterCount > 0 ? "mb-8" : "mb-14"} md:mb-16 text-center`}>
-               <span className="block font-serif italic text-museum-gold mb-4 text-xl md:text-3xl">{t.est}</span>
-               <h2 className={`${language === 'ja' ? "font-serif" : "font-display"} text-3xl md:text-6xl text-museum-ivory mb-4 md:mb-6 tracking-wide leading-tight`}>{t.title}</h2>
-               <p className="max-w-xl mx-auto text-museum-muted font-serif text-xs md:text-xl leading-relaxed">{t.intro}</p>
+              <span className="block font-serif italic text-museum-gold mb-4 text-xl md:text-3xl">{t.est}</span>
+              <h2 className={`${language === 'ja' ? "font-serif" : "font-display"} text-3xl md:text-6xl text-museum-ivory mb-4 md:mb-6 tracking-wide leading-tight`}>{t.title}</h2>
+              <p className="max-w-xl mx-auto text-museum-muted font-serif text-xs md:text-xl leading-relaxed">{t.intro}</p>
             </header>
 
             {activeFilterCount > 0 && (
               <div className="font-serif mb-4 md:mb-10 flex flex-wrap gap-2 justify-center animate-fade-in">
-                 {filters.search && (
-                   <span className="px-3 py-1 bg-museum-900 border border-museum-700 rounded-full text-xs text-museum-ivory flex items-center gap-2">
-                     "{filters.search}" <button onClick={() => setFilters(f => ({...f, search: ''}))}><IconX className="w-3 h-3"/></button>
-                   </span>
-                 )}
-                 {filters.period && (
-                   <span className="px-3 py-1 bg-museum-900 border border-museum-700 rounded-full text-xs text-museum-ivory flex items-center gap-2">
-                     {filters.period} <button onClick={() => setFilters(f => ({...f, period: null}))}><IconX className="w-3 h-3"/></button>
-                   </span>
-                 )}
-                 {filters.artist && (
-                   <span className="px-3 py-1 bg-museum-900 border border-museum-700 rounded-full text-xs text-museum-ivory flex items-center gap-2">
-                     {filters.artist} <button onClick={() => setFilters(f => ({...f, artist: null}))}><IconX className="w-3 h-3"/></button>
-                   </span>
-                 )}
+                {filters.search && (
+                  <span className="px-3 py-1 bg-museum-900 border border-museum-700 rounded-full text-xs text-museum-ivory flex items-center gap-2">
+                    "{filters.search}" <button onClick={() => setFilters(f => ({...f, search: ''}))}><IconX className="w-3 h-3"/></button>
+                  </span>
+                )}
+                {filters.period && (
+                  <span className="px-3 py-1 bg-museum-900 border border-museum-700 rounded-full text-xs text-museum-ivory flex items-center gap-2">
+                    {filters.period} <button onClick={() => setFilters(f => ({...f, period: null}))}><IconX className="w-3 h-3"/></button>
+                  </span>
+                )}
+                {filters.artist && (
+                  <span className="px-3 py-1 bg-museum-900 border border-museum-700 rounded-full text-xs text-museum-ivory flex items-center gap-2">
+                    {filters.artist} <button onClick={() => setFilters(f => ({...f, artist: null}))}><IconX className="w-3 h-3"/></button>
+                  </span>
+                )}
               </div>
             )}
 
