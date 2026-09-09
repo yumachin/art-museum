@@ -131,6 +131,25 @@ function App() {
     }
   }, [currentPage, totalPages]);
 
+  // ページ変更後、ReactのDOM更新が完了してからスクロールを実行する。
+  // Pagination側でscrollToを呼ぶと、setCurrentPage直後（再レンダリング前）に
+  // 実行されてしまい、コンテンツ高さ変動でスムーズスクロールが中断されるため、
+  // useEffectで再レンダリング後に実行し、requestAnimationFrameで
+  // ペイントサイクルも待ってから確実にtopへ移動する。
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    // rAFでブラウザの描画サイクル後に実行することで、
+    // PWAのスタンドアロンモードやiOSでも安定して動作する
+    const raf = requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [currentPage]);
+
   const activeFilterCount = (filters.period ? 1 : 0) + (filters.artist ? 1 : 0) + (filters.search ? 1 : 0);
 
   useEffect(() => {
