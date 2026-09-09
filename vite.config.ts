@@ -59,8 +59,11 @@ export default defineConfig(({ mode }) => {
                 }
               },
               {
-                // Supabase画像のキャッシュ
-                urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/.*/i,
+                // Supabase Storage の画像（GETのみキャッシュ）
+                // PUT/POST のアップロードリクエストはキャッシュしない
+                urlPattern: ({ url, request }: { url: URL; request: Request }) =>
+                  /^https:\/\/.*\.supabase\.co\/storage\//i.test(url.href) &&
+                  request.method === 'GET',
                 handler: 'CacheFirst',
                 options: {
                   cacheName: 'supabase-images-cache',
@@ -71,8 +74,10 @@ export default defineConfig(({ mode }) => {
                 }
               },
               {
-                // APIリクエストのネットワーク優先
-                urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/.*/i,
+                // Supabase REST API（GETのみキャッシュ、書き込みは除外）
+                urlPattern: ({ url, request }: { url: URL; request: Request }) =>
+                  /^https:\/\/.*\.supabase\.co\/rest\//i.test(url.href) &&
+                  request.method === 'GET',
                 handler: 'NetworkFirst',
                 options: {
                   cacheName: 'api-cache',

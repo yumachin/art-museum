@@ -266,8 +266,38 @@ export const museumService = {
         });
 
       if (uploadError) {
-        console.error('❌ Storage upload error:', uploadError);
-        throw uploadError;
+        // Storageが利用できない場合（バケット未作成・権限なし等）は
+        // ローカル保存にフォールバックし、DBへの登録はdata URLで試みる
+        console.warn('⚠️ Storage upload failed, falling back to local:', uploadError.message);
+        const imageUrl = await fileToDataUrl(file);
+        const localRow = createArtworkRow(imageUrl, metadata);
+        saveLocalArtwork(localRow);
+        MOCK_DB_ARTWORKS.unshift(localRow);
+
+        // DBへの登録だけ非同期で試みる（data URLは大きいため省略）
+        supabase
+          .from('artworks')
+          .insert({
+            image_url: 'pending',
+            title_en: metadata.title_en,
+            title_ja: metadata.title_ja || null,
+            artist_en: metadata.artist_en,
+            artist_ja: metadata.artist_ja || null,
+            year_created: metadata.year_created,
+            period_en: metadata.period_en,
+            period_ja: metadata.period_ja || null,
+            description_en: metadata.description_en || null,
+            description_ja: metadata.description_ja || null,
+            level: metadata.level,
+            is_public: false,
+          })
+          .then(({ error }) => {
+            if (error) console.warn('DB insert also failed:', error.message);
+            else console.log('✅ DB record created (image pending upload)');
+          });
+
+        console.log('✅ Fallback: saved locally with ID:', localRow.id);
+        return localRow;
       }
 
       console.log('✅ File uploaded to storage');
