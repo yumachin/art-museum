@@ -290,9 +290,11 @@ export const DEFAULT_TEXTS: Record<Language, Translations> = {
 export const localizeArtwork = (row: ArtworkRow, language: Language): Artwork => {
   return {
     id: row.id,
-    title: (language === 'ja') ? row.title_ja : row.title_en,
-    artist: (language === 'ja') ? row.artist_ja : row.artist_en,
-    period: (language === 'ja') ? row.period_ja : row.period_en,
+    // JA フィールドが null のレコードでも EN にフォールバックして
+    // title.toLowerCase() 等が null クラッシュしないよう保証する
+    title: (language === 'ja') ? (row.title_ja || row.title_en) : row.title_en,
+    artist: (language === 'ja') ? (row.artist_ja || row.artist_en) : row.artist_en,
+    period: (language === 'ja') ? (row.period_ja || row.period_en) : row.period_en,
     year: row.year_created,
     level: row.level ?? 3,
     thumbnailUrl: row.image_url,
